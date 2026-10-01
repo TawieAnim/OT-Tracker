@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0b5cff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="OT Tracker">
+<link rel="manifest" href="manifest.webmanifest">
+<title>OT Tracker</title>
+<style>
+:root{--blue:#0b5cff;--blue2:#0846c7;--bg:#f4f7fb;--card:#fff;--text:#172033;--muted:#697386;--danger:#dc3545;--line:#e5e9f0}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text)}
+header{background:linear-gradient(135deg,var(--blue),#19a0ff);color:#fff;padding:24px 18px 28px;border-radius:0 0 24px 24px}
+header h1{margin:0;font-size:26px}header p{margin:5px 0 0;opacity:.9}
+.container{max-width:720px;margin:auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 5px 18px #15345d0b}
+h2{font-size:18px;margin:0 0 14px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+label{display:block;font-size:13px;font-weight:650;color:var(--muted);margin-bottom:6px}
+input,select{width:100%;height:48px;border:1px solid #d8dee8;border-radius:12px;padding:0 12px;font-size:16px;background:#fff;color:var(--text)}
+input:focus,select:focus{outline:2px solid #b9d2ff;border-color:var(--blue)}
+.full{grid-column:1/-1}.result{background:#edf5ff;border-radius:15px;padding:15px;margin-top:14px}.result strong{font-size:30px;color:var(--blue)}
+.row{display:flex;justify-content:space-between;gap:10px;padding:7px 0}.muted{color:var(--muted)}
+button{border:0;border-radius:12px;padding:13px 16px;font-weight:700;font-size:15px;cursor:pointer}
+.primary{background:var(--blue);color:#fff;width:100%;margin-top:14px}.secondary{background:#eaf1ff;color:var(--blue)}.danger{background:#fff0f1;color:var(--danger)}
+.actions{display:flex;gap:8px;flex-wrap:wrap}.actions button{flex:1;min-width:90px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}.stat{background:#f7f9fc;border-radius:14px;padding:13px}.stat b{font-size:21px;display:block;margin-top:3px}
+.record{border:1px solid var(--line);border-radius:15px;padding:13px;margin-top:10px}.record-head{display:flex;justify-content:space-between;gap:8px}.amount{font-weight:800;color:var(--blue)}
+.empty{text-align:center;color:var(--muted);padding:22px 5px}
+.small{font-size:12px;color:var(--muted)}footer{text-align:center;padding:10px 0 30px;color:var(--muted);font-size:12px}
+@media(max-width:480px){.grid{grid-template-columns:1fr}.full{grid-column:auto}}
+</style>
+</head>
+<body>
+<header>
+  <div class="container">
+    <h1>⏱️ OT Tracker</h1>
+    <p>Singapore OT ×1.5 Calculator & Records</p>
+  </div>
+</header>
+
+<main class="container">
+<section class="card">
+<h2>⚙️ Pay Settings</h2>
+<div class="grid">
+<div><label>Basic salary (S$ / month)</label><input id="salary" type="number" value="2910" step="0.01"></div>
+<div><label>Weekly hours</label><input id="weeklyHours" type="number" value="44" step="0.5"></div>
+<div><label>OT multiplier</label><input id="multiplier" type="number" value="1.5" step="0.1"></div>
+</div>
+<div class="result">
+<div class="row"><span>Basic hourly rate</span><b id="basicRate">S$15.26</b></div>
+<div class="row"><span>OT hourly rate</span><strong id="otRate">S$22.89</strong></div>
+</div>
+</section>
+
+<section class="card">
+<h2>🕐 Calculate OT</h2>
+<div class="grid">
+<div><label>Date</label><input id="date" type="date"></div>
+<div><label>Normal hours</label><input id="normalHours" type="number" value="8" step="0.5"></div>
+<div><label>Start work</label><input id="start" type="time" value="10:00"></div>
+<div><label>End work</label><input id="end" type="time" value="22:00"></div>
+<div><label>Break (minutes)</label><input id="break" type="number" value="90" min="0"></div>
+<div><label>Manual OT (optional)</label><input id="manualOT" type="number" placeholder="Leave blank for automatic" step="0.25"></div>
+</div>
+<div class="result">
+<div class="row"><span>Total time at work</span><b id="worked">11.50 hr</b></div>
+<div class="row"><span>Calculated OT</span><b id="otHours">3.50 hr</b></div>
+<div class="row"><span>OT pay</span><strong id="otPay">S$80.12</strong></div>
+</div>
+<button class="primary" onclick="saveRecord()">＋ Save OT Record</button>
+</section>
+
+<section class="card">
+<h2>📊 Summary</h2>
+<div class="stats">
+<div class="stat"><span class="muted">This month</span><b id="monthHours">0.00 hr</b></div>
+<div class="stat"><span class="muted">OT earnings</span><b id="monthPay">S$0.00</b></div>
+<div class="stat"><span class="muted">All records</span><b id="totalHours">0.00 hr</b></div>
+<div class="stat"><span class="muted">All earnings</span><b id="totalPay">S$0.00</b></div>
+</div>
+</section>
+
+<section class="card">
+<h2>📋 OT History</h2>
+<div class="actions">
+<button class="secondary" onclick="exportCSV()">Export CSV</button>
+<button class="danger" onclick="clearAll()">Delete All</button>
+</div>
+<div id="records"></div>
+</section>
+<footer>OT rate is calculated from monthly basic × 12 ÷ (52 × weekly hours) × OT multiplier.</footer>
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+let records=JSON.parse(localStorage.getItem('otRecords')||'[]');
+
+function money(n){return 'S$'+Number(n||0).toFixed(2)}
+function rates(){
+  const salary=+$('salary').value||0, wh=+$('weeklyHours').value||44, mult=+$('multiplier').value||1.5;
+  const basic=salary*12/(52*wh), ot=basic*mult;
+  $('basicRate').textContent=money(basic); $('otRate').textContent=money(ot);
+  return {basic,ot};
+}
+function calculate(){
+  const r=rates(), s=$('start').value,e=$('end').value, br=+$('break').value||0;
+  let worked=0;
+  if(s&&e){
+    const [sh,sm]=s.split(':').map(Number),[eh,em]=e.split(':').map(Number);
+    let a=sh*60+sm,b=eh*60+em;if(b<a)b+=1440;
+    worked=Math.max(0,(b-a-br)/60);
+  }
+  const manual=$('manualOT').value.trim();
+  const normal=+$('normalHours').value||0;
+  const ot=manual!=='' ? Math.max(0,+manual) : Math.max(0,worked-normal);
+  $('worked').textContent=worked.toFixed(2)+' hr';
+  $('otHours').textContent=ot.toFixed(2)+' hr';
+  $('otPay').textContent=money(ot*r.ot);
+  return {worked,ot,pay:ot*r.ot};
+}
+function saveRecord(){
+  const c=calculate();
+  const date=$('date').value||new Date().toISOString().slice(0,10);
+  if(c.ot<=0){alert('No OT to save. Check your working time or enter manual OT.');return}
+  records.unshift({id:Date.now(),date,start:$('start').value,end:$('end').value,break:+$('break').value||0,worked:c.worked,ot:c.ot,pay:c.pay});
+  localStorage.setItem('otRecords',JSON.stringify(records)); render();
+  alert('OT record saved.');
+}
+function deleteRecord(id){records=records.filter(x=>x.id!==id);localStorage.setItem('otRecords',JSON.stringify(records));render()}
+function render(){
+  const now=new Date(), ym=now.toISOString().slice(0,7);
+  let mh=0,mp=0,th=0,tp=0;
+  records.forEach(x=>{th+=x.ot;tp+=x.pay;if(x.date.slice(0,7)===ym){mh+=x.ot;mp+=x.pay}});
+  $('monthHours').textContent=mh.toFixed(2)+' hr';$('monthPay').textContent=money(mp);
+  $('totalHours').textContent=th.toFixed(2)+' hr';$('totalPay').textContent=money(tp);
+  const box=$('records');box.innerHTML='';
+  if(!records.length){box.innerHTML='<div class="empty">No OT records yet.</div>';return}
+  records.forEach(x=>{
+    const d=document.createElement('div');d.className='record';
+    d.innerHTML=`<div class="record-head"><b>${x.date}</b><span class="amount">${money(x.pay)}</span></div>
+    <div class="small">${x.start||'--'} → ${x.end||'--'} · Break ${x.break} min</div>
+    <div class="row"><span>OT</span><b>${x.ot.toFixed(2)} hr</b></div>
+    <button class="danger" style="width:100%;margin-top:4px" onclick="deleteRecord(${x.id})">Delete</button>`;
+    box.appendChild(d);
+  });
+}
+function clearAll(){if(!records.length)return;if(confirm('Delete all OT records?')){records=[];localStorage.removeItem('otRecords');render()}}
+function exportCSV(){
+  if(!records.length){alert('No records to export.');return}
+  let csv='Date,Start,End,Break Minutes,Worked Hours,OT Hours,OT Pay\\n';
+  records.forEach(x=>csv+=`${x.date},${x.start},${x.end},${x.break},${x.worked.toFixed(2)},${x.ot.toFixed(2)},${x.pay.toFixed(2)}\\n`);
+  const blob=new Blob([csv],{type:'text/csv'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='OT-Records.csv';a.click();URL.revokeObjectURL(a.href);
+}
+['salary','weeklyHours','multiplier','start','end','break','normalHours','manualOT'].forEach(id=>$(id).addEventListener('input',calculate));
+$('date').value=new Date().toISOString().slice(0,10);calculate();render();
+</script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(()=>{}));
+}
+</script>
+</body>
+</html>
